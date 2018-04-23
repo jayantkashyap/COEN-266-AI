@@ -127,14 +127,22 @@
 
 ;; ------------------------------DLS--------------------------------------
 
-(define (dls frontier limit cut-off swap-lst)
-        (cond   ((null? frontier)                       #f)
-                ((is-goal-state? (car frontier))        (cons (caar frontier) (list (append (reverse swap-lst) (cadar frontier)))))
-                ((and (= limit 0) (not (= cut-off 0)))  (dls (cdr frontier) 0 (- cut-off 1) swap-lst))
-                ((and (= limit 0) (= cut-off 0))        (dls frontier (+ limit 1) 0 (pop-swap-pair swap-lst)))
-                (#t                                     (let ((lst (get-children (car frontier))))
-                                                             (dls (append lst (cdr frontier)) (- limit 1) (helper-length lst) (push-swap-pair (car frontier) swap-lst))))))
+;(define (dls frontier limit cut-off swap-lst)
+;        (cond   ((null? frontier)                       #f)
+;                ((is-goal-state? (car frontier))        (cons (caar frontier) (list (append (reverse swap-lst) (cadar frontier)))))
+;                ((and (= limit 0) (not (= cut-off 0)))  (dls (cdr frontier) 0 (- cut-off 1) swap-lst))
+;                ((and (= limit 0) (= cut-off 0))        (dls frontier (+ limit 1) 0 (pop-swap-pair swap-lst)))
+;                (#t                                     (let ((lst (get-children (car frontier))))
+;                                                            (dls (append lst (cdr frontier)) (- limit 1) (helper-length lst) (push-swap-pair (car frontier) swap-lst))))))
 
+(define (dls frontier limit cut-off-lst swap-lst)
+        (cond   ((null? frontier)                                   #f)
+                ((is-goal-state? (car frontier))                    (cons (caar frontier) (list (append (reverse swap-lst) (cadar frontier)))))
+                ((and (= limit 0) 
+                      (not (= (car cut-off-lst) 0)))                (dls (cdr frontier) 0 (cons (- (car cut-off-lst) 1) (cdr cut-off-lst)) swap-lst))
+                ((= (car cut-off-lst) 0)                            (dls frontier (+ limit 1) (cons (- (cadr cut-off-lst) 1) (cddr cut-off-lst)) (pop-swap-pair swap-lst)))
+                (#t                                                 (let    ((lst (get-children (car frontier))))
+                                                                            (dls (append lst (cdr frontier)) (- limit 1) (cons (length lst) cut-off-lst) (push-swap-pair (car frontier) swap-lst))))))
 
 
 ;; ----------------------------ID-DFS--------------------------------------
@@ -142,13 +150,13 @@
 (define (id-dfs start-state)
         (cond   ((null? start-state)        #f)
                 ((null? (cdr start-state))  (cons start-state '(())))
-                (#t                         (let ((len (helper-length start-state)))
+                (#t                         (let ((len (length start-state)))
                                                  (id-dfs-helper (list (cons start-state '(()))) 0 (- len 1) len)))))
 
 (define (id-dfs-helper frontier s e len)
         (cond   ((null? frontier)   #f)
                 ((= e s)            #f)
-                (#t                 (or (dls frontier s len '()) (id-dfs-helper frontier (+ s 1) e len)))))
+                (#t                 (or (dls frontier s '(1) '()) (id-dfs-helper frontier (+ s 1) e len)))))
 
 
 
